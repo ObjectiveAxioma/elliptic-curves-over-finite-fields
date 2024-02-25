@@ -148,3 +148,11 @@ class EllipticCurve():
             return str("y^2 = x^3 - " + str(-self.a) + "x - " + str(-self.b))
 
     __repr__ = __str__
+
+
+# Helper method to compute the Ledengre symbold of all numbers from 1 to p-1. This is used
+# to find the order of the curve over Fq by first finding the order of the curve over Fp.
+# where q = p^n, and then applying |E(q^n)| = q^n + 1 - (alpha^n + beta^n) for roots of the
+# characteristic equation of the Frobenius endomorphism.
+def findLegendre(self, p):
+    return 0
