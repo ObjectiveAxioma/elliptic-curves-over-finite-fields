@@ -113,9 +113,6 @@ class EllipticCurve():
         elif self.char == 3:
             toCheck = (P.y)**2 - (P.x)**3 - self.a*(P.x)**2 - self.b*(P.x) - self.c
 
-    def orderOfBaseField(self):
-        return 0
-
     # Finds the order of E over the field Fp using Legendre symbols and then
     # uses the fact that q = p^k implies |E(Fq)| = q^k + 1 - (alpha + beta)^k
     def orderOfCurve(self):
