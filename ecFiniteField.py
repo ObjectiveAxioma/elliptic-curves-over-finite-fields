@@ -116,8 +116,44 @@ class EllipticCurve():
     def orderOfBaseField(self):
         return 0
 
+    # Finds the order of E over the field Fp using Legendre symbols and then
+    # uses the fact that q = p^k implies |E(Fq)| = q^k + 1 - (alpha + beta)^k
     def orderOfCurve(self):
-        return 0
+        # Get the Legendre symbols over Fp
+        symbols = getLegendre(self.char)
+        print("symbols = " + str(symbols) + "\n")
+        primeOrder = self.char + 1                      # The order of Fp to be used to find |Fq|
+
+        # Loop to find the order of Fp from the Legendre symbols
+        n = 0
+        while n < self.char:
+            primeOrder += symbols[int(n*n*n + self.a*n + self.b) % self.char]
+            n+=1
+
+        # Finds k for which q = p^k
+        k = int(np.log(self.q) / np.log(self.char))
+        print("k = " + str(k) + "\n")
+
+        # Generate the values of s_n = (alpha + beta)^n with alpha and beta being roots of the 
+        # characteristic polynomial of phi_n; necessary for finding the order of Fq
+        x0 = 2
+        x1 = self.char + 1 - primeOrder
+        xvals = [x0, x1]
+        n = 2
+        while n < k:
+            xvals.append(x1 * xvals[n] - self.char * xvals[n-1])
+            n+=1
+        
+        x = xvals[len(xvals) - 1]
+        if k == 1:
+            x = x0
+        print("x = " + str(x) + "\n")
+        if k > 1:
+            order = (self.q)^k + 1 - x^k
+        else:
+            order = primeOrder
+
+        return order
 
     def orderOfPoint(self, P):
         return 0
@@ -127,25 +163,25 @@ class EllipticCurve():
         if self.char == 2:
             # a1 != 0
             if self.eqn == 'n':
-                return str("y^2 + xy = x^3 + " + str(self.a) + "x^2 + " + str(self.b))
+                return str("y^2 + xy = x^3 + " + str(self.a) + "x^2 + " + str(self.b) + ", char = " + str(self.char) + ", field = F" + str(self.q))
             
             # a1 = 0
             if self.eqn == 'z':
-                return str("y^2 + " + str(self.a) + "y = x^3 + " + str(self.b) + "x + " + str(self.c))
+                return str("y^2 + " + str(self.a) + "y = x^3 + " + str(self.b) + "x + " + str(self.c) + ", char = " + str(self.char) + ", field = F" + str(self.q))
 
         # When characteristic is 3
         if self.char == 3:
-            return str("y^2 = x^3 + " + str(self.a) + "x^2 + " + str(self.b) + "x + " + str(self.a))
+            return str("y^2 = x^3 + " + str(self.a) + "x^2 + " + str(self.b) + "x + " + str(self.a) + ", char = " + str(self.char) + ", field = F" + str(self.q))
 
         # When characteristic is not 2 or 3
         if self.a > 0 and self.b > 0:
-            return str("y^2 = x^3 + " + str(self.a) + "x + " + str(self.b))
+            return str("y^2 = x^3 + " + str(self.a) + "x + " + str(self.b) + ", char = " + str(self.char) + ", field = F" + str(self.q))
         elif self.a > 0 and self.b < 0:
-            return str("y^2 = x^3 + " + str(self.a) + "x - " + str(-self.b))
+            return str("y^2 = x^3 + " + str(self.a) + "x - " + str(-self.b) + ", char = " + str(self.char) + ", field = F" + str(self.q))
         elif self.a < 0 and self.b > 0:
-            return str("y^2 = x^3 - " + str(-self.a) + "x + " + str(self.b))
+            return str("y^2 = x^3 - " + str(-self.a) + "x + " + str(self.b) + ", char = " + str(self.char) + ", field = F" + str(self.q))
         elif self.a < 0 and self.b < 0:
-            return str("y^2 = x^3 - " + str(-self.a) + "x - " + str(-self.b))
+            return str("y^2 = x^3 - " + str(-self.a) + "x - " + str(-self.b) + ", char = " + str(self.char) + ", field = F" + str(self.q))
 
     __repr__ = __str__
 
@@ -154,5 +190,40 @@ class EllipticCurve():
 # to find the order of the curve over Fq by first finding the order of the curve over Fp.
 # where q = p^n, and then applying |E(q^n)| = q^n + 1 - (alpha^n + beta^n) for roots of the
 # characteristic equation of the Frobenius endomorphism.
-def findLegendre(self, p):
-    return 0
+# Note: assume char != 2, 3.
+def getLegendre(p):
+    
+    # Get a list of all squares and use it to compute the Legendre symbols of all elements in Fq.
+    n = 2
+    squares = []
+    while n < p:
+        if n not in squares:
+            squares.append(n*n)
+        n+=1
+
+    # Get a list of all the legendre symbols of elemnts of Fq.
+    n = 2
+    legendre = [0, 1]
+    while n < p:
+        if n in squares:
+            legendre.append(1)
+        elif n not in squares:
+            legendre.append(-1)
+        n+=1
+
+    return legendre
+
+
+
+
+#### Current testing code ####
+curve = EllipticCurve(5, 5, 1, 1)       # y^2 = x^3 + x + 1 over F5
+order = curve.orderOfCurve()
+curve2 = EllipticCurve(5, 25, 1, 1)     # y^2 = x^3 + x + 1 over F25
+order2 = curve2.orderOfCurve()
+
+print("Order of y^2 = x^3 + x + 1 over F5: ")
+print(order)
+print("\n")
+print("Orer of y^2 - x^3 _ x _ 1 over F25: ")
+print(order2)
