@@ -75,8 +75,6 @@ class Point():
 # addPoints(P, Q): adds points mod char                                                  #
 # timesTwo(P): doubles the point P mod char                                              #
 # mulPoint(n, P): adds P to itself n times mod char                                      #
-# orderOfCurve(): computes the order of the curve over Fq using Lagrange symbols         #
-# orderOfPoint(P): computes the order of a point using Schoof's algorithm                #
 # plotCurve(): plots the curve on the affine 2-plane of Fq                               #
 #                                                                                        #
 # Comparison with "==" is supported. Calling the object returns (general) Weierst. eqn   #
@@ -120,6 +118,7 @@ class EllipticCurve():
     def orderOfCurve(self):
         # Get the Legendre symbols over Fp
         symbols = getLegendre(self.char)
+        print("symbols = " + str(symbols) + "\n")
         primeOrder = self.char + 1                      # The order of Fp to be used to find |Fq|
 
         # Loop to find the order of Fp from the Legendre symbols
@@ -130,22 +129,24 @@ class EllipticCurve():
 
         # Finds k for which q = p^k
         k = int(np.log(self.q) / np.log(self.char))
+        print("k = " + str(k) + "\n")
 
         # Generate the values of s_n = (alpha + beta)^n with alpha and beta being roots of the 
         # characteristic polynomial of phi_n; necessary for finding the order of Fq
         x0 = 2
         x1 = self.char + 1 - primeOrder
         xvals = [x0, x1]
-        n = 1
+        n = 2
         while n < k:
             xvals.append(x1 * xvals[n] - self.char * xvals[n-1])
             n+=1
         
         x = xvals[len(xvals) - 1]
         if k == 1:
-            x = x1
+            x = x0
+        print("x = " + str(x) + "\n")
         if k > 1:
-            order = (self.char)**k + 1 - x
+            order = (self.q)^k + 1 - x^k
         else:
             order = primeOrder
 
