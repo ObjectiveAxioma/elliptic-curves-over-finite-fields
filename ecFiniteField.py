@@ -107,13 +107,24 @@ class EllipticCurve():
 
     def isOnCurve(self, P):
         if self.char != 2 and self.char != 3:
-            toCheck = (P.y)**2 - (P.x)**3 - self.a*(P.x) - self.b
+            toCheck = (P.y)**2 - (P.x)**3 - self.a*(P.x) - self.b % self.char
             if toCheck == 0:
                 return 1
             else:
                 return 0
         elif self.char == 3:
-            toCheck = (P.y)**2 - (P.x)**3 - self.a*(P.x)**2 - self.b*(P.x) - self.c
+            toCheck = (P.y)**2 - (P.x)**3 - self.a*(P.x)**2 - self.b*(P.x) - self.c % 3
+
+    # Add the points P and Q according to the group law on the curve E, modding the cooridnates
+    # by the characteristic of the curve.
+    def addPoints(self, P, Q):
+        if not isinstance(P, Point) or not isinstance(Q, Point):
+            return "Please enter a Point object."
+        if not self.isOnCurve(P) or not self.isOnCurve(Q):
+            return "Please enter a Point on the curve."
+
+        return 0
+
 
     # Finds the order of E over the field Fp using Legendre symbols and then
     # uses the fact that q = p^k implies |E(Fq)| = q^k + 1 - (alpha + beta)^k
