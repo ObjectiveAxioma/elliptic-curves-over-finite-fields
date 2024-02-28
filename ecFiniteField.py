@@ -105,15 +105,31 @@ class EllipticCurve():
             self.eqn = "t"      # t for three, i.e. char = 3
             self.c = c % 3
 
+    # Check if a given  point is on the curve.
     def isOnCurve(self, P):
+        # The point at infinity is on every curve.
+        if P.x == float("inf") or P.y == float("inf"):
+            return 1;
+
+        # If the character of the curve is not 2 or 3, follow standard procedure.
         if self.char != 2 and self.char != 3:
-            toCheck = (P.y)**2 - (P.x)**3 - self.a*(P.x) - self.b % self.char
+            toCheck = ((P.y)**2 - (P.x)**3 - self.a*(P.x) - self.b) % self.char
             if toCheck == 0:
                 return 1
             else:
                 return 0
+
+        # If the character is 3, another formula must be used.
         elif self.char == 3:
             toCheck = (P.y)**2 - (P.x)**3 - self.a*(P.x)**2 - self.b*(P.x) - self.c % 3
+
+        # If the character is 2, then there are two cases to check.
+        # Will be added later.
+
+
+    # Adds a point of the curve to itself over the finite field of definition.
+    def timesTwo(self, P):
+        return 0
 
     # Add the points P and Q according to the group law on the curve E, modding the cooridnates
     # by the characteristic of the curve.
@@ -123,7 +139,31 @@ class EllipticCurve():
         if not self.isOnCurve(P) or not self.isOnCurve(Q):
             return "Please enter a Point on the curve."
 
-        return 0
+        # Find all of the inverses mod the char of the elliptic curve so that the point
+        # addition formula can be used.
+        inverses = findInverses(self.char)
+
+        if not P.x == float("inf") and not P.y == float("inf") and not Q.x == float("inf") and not Q.y == float("inf"):
+            m = (Q.y - P.y) * inverses[int(Q.x - P.x)]
+            x = m*m - Q.x - P.x % self.char
+            y = -(m*(x - P.x) + P.y) % self.char
+
+        if P.x == Q.x:
+            if P.y != Q.y:
+                return Point(float("inf"), float("inf"))
+            else:
+                return curve.timesTwo(P)
+
+        if P.x == float("inf") and P.y == float("inf"):
+            x = Q.x
+            y = Q.y
+
+        if Q.x == float("inf") and Q.y == float("inf"):
+            x = P.x
+            y = P.y
+
+        R = Point(x, y, curve)
+        return R
 
 
     # Finds the order of E over the field Fp using Legendre symbols and then
@@ -220,10 +260,26 @@ def getLegendre(p):
 
     return legendre
 
+# Helper method to find the inverses of every number mod p. This is used when adding
+# two points over a finite field with char p.
+def findInverses(p):
+    n = 2
+    inverses = [0, 1]
+    while n < p:
+        i = n
+        while i < p:
+            if i*n % p == 1:
+                inverses.append(i)
+            i+=1
+        n+=1
+
+    return inverses
 
 
 
 #### Current testing code ####
+
+# Test 1: point counting with Legendre symbols
 curve = EllipticCurve(5, 5, 1, 1)       # y^2 = x^3 + x + 1 over F5
 order = curve.orderOfCurve()
 curve2 = EllipticCurve(5, 25, 1, 1)     # y^2 = x^3 + x + 1 over F25
@@ -234,3 +290,10 @@ print(order)
 print("\n")
 print("Orer of y^2 - x^3 _ x _ 1 over F25: ")
 print(order2)
+
+# Test 2: point addition over finite field
+P = Point(0, 1, curve)
+Q = Point(2, -1, curve)
+inf = Point(float("inf"), float("inf"), curve)
+print(P + Q)
+print(P + inf)
