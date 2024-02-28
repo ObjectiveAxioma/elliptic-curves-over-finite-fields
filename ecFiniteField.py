@@ -31,6 +31,10 @@ class Point():
             return "A curve must be provided with P."
         self.x = x % E.char
         self.y = y % E.char
+        if x == float("inf"):
+            self.x = float("inf")
+        if y == float("inf"):
+            self.y = float("inf")
 
     def __neg__(self):
         if self.x == float("inf") or self.y == float("inf"):
@@ -129,7 +133,16 @@ class EllipticCurve():
 
     # Adds a point of the curve to itself over the finite field of definition.
     def timesTwo(self, P):
-        return 0
+        # Find the inverses of all values in Fp.
+        inverses = findInverses(self.char)
+
+        m = ((3 * P.x * P.x + P.curve.a) * inverses[2] * inverses[P.y % self.char]) % self.char
+
+        x = (m*m - 2*P.x) % self.char
+        y = -(m*(x - P.x) + P.y)
+        Q = Point(x, y, curve)
+
+        return Q
 
     # Add the points P and Q according to the group law on the curve E, modding the cooridnates
     # by the characteristic of the curve.
@@ -144,13 +157,13 @@ class EllipticCurve():
         inverses = findInverses(self.char)
 
         if not P.x == float("inf") and not P.y == float("inf") and not Q.x == float("inf") and not Q.y == float("inf"):
-            m = (Q.y - P.y) * inverses[int(Q.x - P.x)]
+            m = (Q.y - P.y) * inverses[int(Q.x - P.x) % self.char]
             x = m*m - Q.x - P.x % self.char
             y = -(m*(x - P.x) + P.y) % self.char
 
         if P.x == Q.x:
             if P.y != Q.y:
-                return Point(float("inf"), float("inf"))
+                return Point(float("inf"), float("inf"), curve)
             else:
                 return curve.timesTwo(P)
 
@@ -165,6 +178,26 @@ class EllipticCurve():
         R = Point(x, y, curve)
         return R
 
+    # Multiply a point by an integer n, i.e. add it to itself n times.
+    def mulPoint(self, P, n):
+        if P.x == float("inf") or P.y == float("inf"):
+            return P
+
+        a = n
+        B = Point(float("inf"), float("inf"), curve)
+        C = P
+
+        while a != 0:
+            if a %2 == 0:
+                a = a/2
+                B = B
+                C = self.timesTwo(C)
+            elif a % 2 == 1:
+                a = a - 1
+                B = B + C
+                C = C
+
+        return B
 
     # Finds the order of E over the field Fp using Legendre symbols and then
     # uses the fact that q = p^k implies |E(Fq)| = q^k + 1 - (alpha + beta)^k
@@ -266,7 +299,7 @@ def findInverses(p):
     n = 2
     inverses = [0, 1]
     while n < p:
-        i = n
+        i = 2
         while i < p:
             if i*n % p == 1:
                 inverses.append(i)
@@ -274,7 +307,6 @@ def findInverses(p):
         n+=1
 
     return inverses
-
 
 
 #### Current testing code ####
@@ -296,4 +328,5 @@ P = Point(0, 1, curve)
 Q = Point(2, -1, curve)
 inf = Point(float("inf"), float("inf"), curve)
 print(P + Q)
+print(P + P)
 print(P + inf)
