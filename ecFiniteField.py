@@ -73,15 +73,18 @@ class Point():
 # EllipticCurve.b: second coefficient of Weierstrass or  general Weierstrass is char = 2 #
 # EllipticCurve.c: third coefficient of gen. Weierst., only when char = 3 or 2 and t = 1 #
 # EllipticCurve.t: whether or not a1 = 0 in gen. Weierst., only when char = 2            #
+# EllipticCurve.j: the j-invariant of the curve                                          #
 # EllipticCurve.dis: discriminant of the curve, must be != 0                             #
 #                                                                                        #
 # isOnCurve(P): returns 1 if P is on curve, 0 otherwise                                  #
-# addPoints(P, Q): adds points mod char                                                  #
+# isIsomorphic(E) : returns 1 if E and C are isomorphic and 0 otherwise                  #
 # timesTwo(P): doubles the point P mod char                                              #
+# addPoints(P, Q): adds P and Q according to the group law on E mod char of Fq           #
 # mulPoint(n, P): adds P to itself n times mod char                                      #
 # orderOfCurve(): computes the order of the curve over Fq using Lagrange symbols         #
-# orderOfPoint(P): computes the order of a point using Schoof's algorithm                #
-# plotCurve(): plots the curve on the affine 2-plane of Fq                               #
+# orderOfPoint(P): computes the order of a point using baby step, giant step             #
+# isSupersingular(): returns 0 if E[p] != 0, otherwise returns 1                         #
+# Schoof(): returns the order of the curve via Schoof's algorithm                        #
 #                                                                                        #
 # Comparison with "==" is supported. Calling the object returns (general) Weierst. eqn   #
 ##########################################################################################
@@ -109,6 +112,8 @@ class EllipticCurve():
             self.eqn = "t"      # t for three, i.e. char = 3
             self.c = c % 3
 
+        self.j = (4*(self.a)**3) / (4*(self.a)**3 + 27*(self.b)**2)
+
     # Check if a given  point is on the curve.
     def isOnCurve(self, P):
         # The point at infinity is on every curve.
@@ -130,6 +135,13 @@ class EllipticCurve():
         # If the character is 2, then there are two cases to check.
         # Will be added later.
 
+    # Determines whether the curve is isomorphic to another curve E by determining whether
+    # or not their j-invariants are identical.
+    def isIsomorphic(self, E):
+        if self.j == E.j:
+            return 1
+
+        return 0
 
     # Adds a point of the curve to itself over the finite field of definition.
     def timesTwo(self, P):
@@ -236,7 +248,18 @@ class EllipticCurve():
         return order
 
     def orderOfPoint(self, P):
+
         return 0
+
+    # Determines whether or not the curve is supersingular using the equivalent condition
+    # that E/Fp is supersingular if and only if the order of the curve is 1 mod char.
+    def isSupersingular(self):
+        order = self.orderOfCurve()
+        if order % self.char == 1:
+            return 1
+        
+        return 0
+
 
     def __str__(self):
         # When characteristic is 2
