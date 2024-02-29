@@ -55,6 +55,8 @@ class Point():
     __rmul__ = __mul__
 
     def __eq__(self, other):
+        if other == "inf":
+            return self.x == float("inf") and self.y == float("inf")
         return self.x == other.x and self.y == other.y
 
     def __str__(self):
@@ -195,6 +197,13 @@ class EllipticCurve():
         if P.x == float("inf") or P.y == float("inf"):
             return P
 
+        # Deal with the case where n is negative.
+        sign = 1
+        if n < 0:
+            n = -n
+            sign = -1
+
+
         a = n
         B = Point(float("inf"), float("inf"), curve)
         C = P
@@ -208,7 +217,9 @@ class EllipticCurve():
                 a = a - 1
                 B = B + C
                 C = C
-
+    
+        if sign == -1:
+            return -B
         return B
 
     # Finds the order of E over the field Fp using Legendre symbols and then
@@ -247,9 +258,50 @@ class EllipticCurve():
 
         return order
 
+    # Finds the order of a point using the baby step, giant step algorithm.
     def orderOfPoint(self, P):
+        Q = (self.q + 1) * P
+        m = int(self.q**(1/4) + 1)
+        
+        jP = []
+        j = 0
+        while j <= m:
+            jP.append(j*P)
+            j+=1
 
-        return 0
+        k = -m
+        isMatch = 0
+        match = 0
+        sign = 0
+        while k <= m and isMatch == 0:
+            x = Q + k*(2*m*P)
+            j = 0
+            while j < len(jP) and isMatch == 0:
+                if Q + k*(2*m * P) == j*P:
+                    isMatch = 1
+                    match = Q + k*(2*m * P)
+                    sign = -1
+                elif Q + k*(2*m * P) == -j*P:
+                    isMatch = 1
+                    match = Q + k*(2*m * P)
+                    sign = 1
+                j+=1
+            k+=1
+
+        M = self.q + 1 + 2*m*k + (-sign) * j
+
+        return self.recursiveBSGS(M)
+
+    # Computes the recursive part of the baby step, giant step algorithm.
+    def recursiveBSGS(self, M):
+        factors = factor(M)
+        j = 0
+        while j < len(factors):
+            if (M/factors[j]) == "inf":
+                x = recursiveBSGS(M/factors[j])
+            j+=1
+        return M
+
 
     # Determines whether or not the curve is supersingular using the equivalent condition
     # that E/Fp is supersingular if and only if the order of the curve is 1 mod char.
@@ -330,6 +382,51 @@ def findInverses(p):
         n+=1
 
     return inverses
+
+# Helper method for factor to tell if an integer is prime.
+def isPrime(n):
+    if not isinstance(n, int) or isinstance(n, float):
+        return "Please pass an int or a float."
+
+    n = int(n)
+    l = int(n**(1/2) + 1)
+    i = 2
+    while i < l:
+        if n % i == 0:
+            return 0
+        i+=1
+
+    return 1
+
+
+# Helper method to get the prime factors of n. Used in baby step, giant step for point order.
+def factor(n):
+    if not isinstance(n, int) or isinstance(n, float):
+        return "Please pass an int or a float."
+
+    n = int(n)
+
+    factors = [1]
+    m = int(n**(1/2) + 1)
+    if (n % 2) == 0:
+        factors.append(2)
+    j = 3
+    while j <= m:
+        if isPrime(j) and (n % j) == 0:
+            factors.append(j)
+        j+=1
+
+    j = int(n**(1/2) + 1)
+    while j < int(n/2 + 1):
+        for p in factors:
+            if int(p * j) == n:
+                factors.append(j)
+        j+=1
+
+    if isPrime(n):
+        factors.append(n)
+
+    return factors
 
 
 #### Current testing code ####
