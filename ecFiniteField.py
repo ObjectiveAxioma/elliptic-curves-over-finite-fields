@@ -262,12 +262,6 @@ class EllipticCurve():
     def orderOfPoint(self, P):
         Q = (self.q + 1) * P
         m = int(self.q**(1/4) + 1)
-        
-        jP = []
-        j = 0
-        while j <= m:
-            jP.append(j*P)
-            j+=1
 
         k = -m
         isMatch = 0
@@ -276,30 +270,36 @@ class EllipticCurve():
         while k <= m and isMatch == 0:
             x = Q + k*(2*m*P)
             j = 0
-            while j < len(jP) and isMatch == 0:
-                if Q + k*(2*m * P) == j*P:
+            while j <+ m and isMatch == 0:
+                currentPoint = j*P
+                if x == currentPoint:
                     isMatch = 1
-                    match = Q + k*(2*m * P)
                     sign = -1
-                elif Q + k*(2*m * P) == -j*P:
+                elif x == -currentPoint:
                     isMatch = 1
-                    match = Q + k*(2*m * P)
                     sign = 1
                 j+=1
             k+=1
 
-        M = self.q + 1 + 2*m*k + (-sign) * j
+        M = self.q + 1 + 2*m*(k-1) + (sign) * (j-1)
+        M = int(((M**2)**(1/2)))
 
-        return self.recursiveBSGS(M)
+        return self.recursiveBSGS(M, P)
 
     # Computes the recursive part of the baby step, giant step algorithm.
-    def recursiveBSGS(self, M):
+    def recursiveBSGS(self, M, P):
+        print("M = " + str(M))
         factors = factor(M)
-        j = 0
+        repeat = 0
+        x = 0
+        j = 1
         while j < len(factors):
-            if (M/factors[j]) == "inf":
-                x = recursiveBSGS(M/factors[j])
+            x = int(M/factors[j])
+            if x*P == "inf":
+                repeat = x
             j+=1
+        if repeat != 0:
+            return self.recursiveBSGS(repeat, P)
         return M
 
 
@@ -405,6 +405,8 @@ def factor(n):
         return "Please pass an int or a float."
 
     n = int(n)
+    if n == 1:
+        return [1]
 
     factors = [1]
     m = int(n**(1/2) + 1)
