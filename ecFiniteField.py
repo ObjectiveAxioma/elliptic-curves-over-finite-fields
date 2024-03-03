@@ -151,11 +151,11 @@ class EllipticCurve():
         # Find the inverses of all values in Fp.
         inverses = findInverses(self.char)
 
-        m = ((3 * P.x * P.x + P.curve.a) * inverses[2] * inverses[P.y % self.char]) % self.char
+        m = ((3 * P.x * P.x + P.self.a) * inverses[2] * inverses[P.y % self.char]) % self.char
 
         x = (m*m - 2*P.x) % self.char
         y = -(m*(x - P.x) + P.y)
-        Q = Point(x, y, curve)
+        Q = Point(x, y, self)
 
         return Q
 
@@ -180,7 +180,7 @@ class EllipticCurve():
             if P.y != Q.y:
                 return Point(float("inf"), float("inf"), self)
             else:
-                return curve.timesTwo(P)
+                return self.timesTwo(P)
 
         if P.x == float("inf") and P.y == float("inf"):
             x = Q.x
@@ -190,7 +190,7 @@ class EllipticCurve():
             x = P.x
             y = P.y
 
-        R = Point(x, y, curve)
+        R = Point(x, y, self)
         return R
 
     # Multiply a point by an integer n, i.e. add it to itself n times.
@@ -206,7 +206,7 @@ class EllipticCurve():
 
 
         a = n
-        B = Point(float("inf"), float("inf"), curve)
+        B = Point(float("inf"), float("inf"), self)
         C = P
 
         while a != 0:
