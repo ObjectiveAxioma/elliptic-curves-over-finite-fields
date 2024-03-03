@@ -4,12 +4,13 @@ import numpy as np
 ### ELLIPTIC CURVES OVER FINITE FIELDS ###
 ##########################################
 
-##########################################################################################
-# This program is motivated by the fact that my previous EC implementation cannot handle #
-# finite fields conveniently and I'd like to implement some algorithms I'm learning for  #
-# them to improve my understanding and learn to work with finite fields.                 # 
-##########################################################################################
 
+##########################################################################################
+# This program contains the Point and EllipticCurve classes, constituting a full         #
+# implementation of the elliptic curve object over a finite field with algorithms for    #
+# point addition, multiplication with integers, finding group and point order, and more. #
+# This is to be used in my future projects in elliptic curve cryptography.               #
+##########################################################################################
 
 
 ##########################################################################################
@@ -86,7 +87,6 @@ class Point():
 # orderOfCurve(): computes the order of the curve over Fq using Lagrange symbols         #
 # orderOfPoint(P): computes the order of a point using baby step, giant step             #
 # isSupersingular(): returns 0 if E[p] != 0, otherwise returns 1                         #
-# Schoof(): returns the order of the curve via Schoof's algorithm                        #
 #                                                                                        #
 # Comparison with "==" is supported. Calling the object returns (general) Weierst. eqn   #
 ##########################################################################################
@@ -133,9 +133,10 @@ class EllipticCurve():
         # If the character is 3, another formula must be used.
         elif self.char == 3:
             toCheck = (P.y)**2 - (P.x)**3 - self.a*(P.x)**2 - self.b*(P.x) - self.c % 3
-
-        # If the character is 2, then there are two cases to check.
-        # Will be added later.
+            if toCheck == 0:
+                return 1
+            else:
+                return 0
 
     # Determines whether the curve is isomorphic to another curve E by determining whether
     # or not their j-invariants are identical.
@@ -326,7 +327,22 @@ class EllipticCurve():
 
         # When characteristic is 3
         if self.char == 3:
-            return str("y^2 = x^3 + " + str(self.a) + "x^2 + " + str(self.b) + "x + " + str(self.a) + ", char = " + str(self.char) + ", field = F" + str(self.q))
+            if self.a > 0 and self.b > 0 and self.c > 0:
+                return str("y^2 = x^3 + " + str(self.a) + "x^2 + " + str(self.b) + "x + " + str(self.c) + ", char = " + str(self.char) + ", field = F" + str(self.q))
+            elif self.a > 0 and self.b > 0 and self.c == 0:
+                return str("y^2 = x^3 + " + str(self.a) + "x^2 + " + str(self.b) + "x" + ", char = " + str(self.char) + ", field = F" + str(self.q))
+            elif self.a > 0 and self.b == 0 and self.c > 0:
+                return str("y^2 = x^3 + " + str(self.a) + "x^2 + " + str(self.c) +", char = " + str(self.char) + ", field = F" + str(self.q))
+            elif self.a == 0 and self.b > 0 and self.c > 0:
+                return str("y^2 = x^3 + " + str(self.b) + "x + " + str(self.c) + ", char = " + str(self.char) + ", field = F" + str(self.q))
+            elif self.a > 0 and self.b == 0 and self.c == 0:
+                return str("y^2 = x^3 + " + str(self.a) + ", char = " + str(self.char) + ", field = F" + str(self.q))
+            elif self.a == 0 and self.b == 0 and self.c > 0:
+                return str("y^2 = x^3 + " + str(self.c) + ", char = " + str(self.char) + ", field = F" + str(self.q))
+            elif self.a == 0 and self.b > 0 and self.c == 0:
+                return str("y^2 = x^3 + " + str(self.b) + "x" + "char = " + str(self.char) + ", field = F" + str(self.q))
+            else:
+                return str("y^2 = x^3" + ", char = " + str(self.char) + ", field = F" + str(self.q))
 
         # When characteristic is not 2 or 3
         if self.a > 0 and self.b > 0:
@@ -429,26 +445,3 @@ def factor(n):
         factors.append(n)
 
     return factors
-
-
-#### Current testing code ####
-
-# Test 1: point counting with Legendre symbols
-curve = EllipticCurve(5, 5, 1, 1)       # y^2 = x^3 + x + 1 over F5
-order = curve.orderOfCurve()
-curve2 = EllipticCurve(5, 25, 1, 1)     # y^2 = x^3 + x + 1 over F25
-order2 = curve2.orderOfCurve()
-
-print("Order of y^2 = x^3 + x + 1 over F5: ")
-print(order)
-print("\n")
-print("Orer of y^2 - x^3 _ x _ 1 over F25: ")
-print(order2)
-
-# Test 2: point addition over finite field
-P = Point(0, 1, curve)
-Q = Point(2, -1, curve)
-inf = Point(float("inf"), float("inf"), curve)
-print(P + Q)
-print(P + P)
-print(P + inf)
