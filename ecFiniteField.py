@@ -178,7 +178,7 @@ class EllipticCurve():
 
         if P.x == Q.x:
             if P.y != Q.y:
-                return Point(float("inf"), float("inf"), curve)
+                return Point(float("inf"), float("inf"), self)
             else:
                 return curve.timesTwo(P)
 
