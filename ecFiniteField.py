@@ -151,7 +151,7 @@ class EllipticCurve():
         # Find the inverses of all values in Fp.
         inverses = findInverses(self.char)
 
-        m = ((3 * P.x * P.x + P.self.a) * inverses[2] * inverses[P.y % self.char]) % self.char
+        m = ((3 * P.x * P.x + self.a) * inverses[2] * inverses[P.y % self.char]) % self.char
 
         x = (m*m - 2*P.x) % self.char
         y = -(m*(x - P.x) + P.y)
